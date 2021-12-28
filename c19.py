@@ -50,13 +50,13 @@ latest_table = latest_data[["Total New Cases","Positivty Rate","Seven Day Averag
 st.subheader("Current Snapshot for "+str(latest_data["Reported Date"].max()))
 
 
-#Column testing
+#Add Columns and Display KPI's
 kpicol1,kpicol2,kpicol3 = st.columns(3)
 kpicol1.metric("Total New Cases",int(latest_data["Total New Cases"]))
 kpicol2.metric("Positivity Rate %",latest_data["Positivty Rate"])
 kpicol3.metric("Seven Day Average (Cases Per Day)",int(latest_data["Seven Day Average"]))
 
-
+#Create a Dataframe to Plot  All-Time Daily Cases
 daily_cases_trend = daily_cases[["Reported Date","Total New Cases"]]
 st.subheader("Total Cases by Day")
 st.line_chart(daily_cases_trend.set_index('Reported Date'))
