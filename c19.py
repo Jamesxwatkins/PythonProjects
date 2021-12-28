@@ -1,6 +1,7 @@
-from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
-import streamlit as st
 import pandas as pd
+import streamlit as st
+from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
+import datetime
 
 # create a function that reads in a csv, selects relevant columns, formats a date, and then sorts by that date
 def import_data(path,date_col,columns):
@@ -43,12 +44,7 @@ st.caption("This application shows the current status of covid-19 cases in Ontar
 
 #Get the Most Recent Data to Show as an Overview
 latest_data = daily_cases[(daily_cases["Reported Date"]== daily_cases["Reported Date"].max())]
-
-#Drop the Date Column to Show Key Metrics
-latest_table = latest_data[["Total New Cases","Positivty Rate","Seven Day Average"]]
-
 st.subheader("Current Snapshot for "+str(latest_data["Reported Date"].max()))
-
 
 #Add Columns and Display KPI's
 kpicol1,kpicol2,kpicol3 = st.columns(3)
@@ -56,10 +52,23 @@ kpicol1.metric("Total New Cases",int(latest_data["Total New Cases"]))
 kpicol2.metric("Positivity Rate %",latest_data["Positivty Rate"])
 kpicol3.metric("Seven Day Average (Cases Per Day)",int(latest_data["Seven Day Average"]))
 
-#Create a Dataframe to Plot  All-Time Daily Cases
+#Create a Dataframe to Plot All-Time Daily Cases
 st.subheader("Total Cases by Day")
-overalltrendcols, overalltrendfilter = st.columns(2)
-daily_cases_trend = daily_cases[["Reported Date","Total New Cases"]]
-overalltrendcols.line_chart(daily_cases_trend.set_index('Reported Date'))
+daily_cases_trend = daily_cases[["Reported Date","Total New Cases","Seven Day Average"]]
+
+#Create a Date Picker to Filter the Daily Case Charts
+date_vals = (daily_cases_trend["Reported Date"].min(),daily_cases_trend["Reported Date"].max())
+start_date, end_date = st.date_input("Select a Time Frame",date_vals)
+if start_date < end_date: #Ensure Start Date is Not Greater Than End Date
+    pass
+else:
+    st.error('Start Date is Greater Than End Date')
+
+mask = (daily_cases_trend["Reported Date"]>= start_date) & (daily_cases_trend["Reported Date"]<= end_date)
+
+daily_cases_trend = daily_cases_trend.loc[mask]
+daily_cases_trend.set_index("Reported Date",inplace=True)
+
+st.line_chart(daily_cases_trend)
 
 
