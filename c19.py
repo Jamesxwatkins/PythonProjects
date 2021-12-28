@@ -57,8 +57,9 @@ kpicol2.metric("Positivity Rate %",latest_data["Positivty Rate"])
 kpicol3.metric("Seven Day Average (Cases Per Day)",int(latest_data["Seven Day Average"]))
 
 #Create a Dataframe to Plot  All-Time Daily Cases
+overalltrendcols, overalltrendfilter = st.columns(2)
 daily_cases_trend = daily_cases[["Reported Date","Total New Cases"]]
 st.subheader("Total Cases by Day")
-st.line_chart(daily_cases_trend.set_index('Reported Date'))
+overalltrendcols.line_chart(daily_cases_trend.set_index('Reported Date'))
 
-st.header("TEST TEST TEST")
+
