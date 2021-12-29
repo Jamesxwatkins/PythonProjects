@@ -89,10 +89,10 @@ daily_cases_trend = daily_cases_trend.loc[mask]
 daily_cases_trend_chart = px.line(daily_cases_trend, 
     x="Reported Date", y=["Total New Cases","Seven Day Average"],
     color_discrete_sequence=["#9c9c9c","#fc7e00"],
-    labels={"Reported Date":"","value":"Total Cases","variable":"Measure Name"}
+    labels={"Reported Date":"","value":"Total Cases","variable":"Measure Name"},
+    title="Total Confirmed Cases by Day"
     )
 
-st.subheader("Total Cases by Day")
 st.plotly_chart(daily_cases_trend_chart,use_container_width=True)
 
 #Plot Daily Deaths
@@ -109,9 +109,9 @@ death_trending = death_trending.loc[mask]
 daily_death_trend_chart = px.line(death_trending, 
     x="Reported Date", y=["Total New Deaths","Seven Day Average"],
     color_discrete_sequence=["#9c9c9c","#ff0000"],
-    labels={"Reported Date":"","value":"Total Deaths","variable":"Measure Name"}
+    labels={"Reported Date":"","value":"Total Deaths","variable":"Measure Name"},
+    title="Total Deaths by Day"
     )
 
 #Plot the Death Trends
-st.subheader("Total Deaths by Day")
 st.plotly_chart(daily_death_trend_chart, use_container_width=True)
