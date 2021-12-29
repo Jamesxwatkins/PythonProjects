@@ -18,7 +18,7 @@ st.set_page_config(layout="wide")
 
 #Daily COVID-19 Cases in Ontario
 covid_status = 'https://data.ontario.ca/dataset/f4f86e54-872d-43f8-8a86-3892fd3cb5e6/resource/ed270bb8-340b-41f9-a7c6-e8ef587e6d11/download/covidtesting.csv'
-covid_status_columns = ["Reported Date","Total Cases","Percent positive tests in last day","Resolved","Deaths"]
+covid_status_columns = ["Reported Date","Total Cases","Percent positive tests in last day","Resolved","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Deaths"]
 daily_cases = import_data(covid_status,"Reported Date",covid_status_columns)
 
 
@@ -51,9 +51,9 @@ daily_cases = daily_cases.fillna(0)
 #Re-Organize Columns
 
 daily_cases = daily_cases[["Reported Date","Total New Cases","Increase in Cases","Percent positive tests in last day","Increase in Positivity",
-    "Seven Day Average","Increase in Seven Day Average","Total Active","Increase in Active Cases","Total New Deaths","Increase in Deaths"]]
+    "Seven Day Average","Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths"]]
 
-daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate"}, inplace= True)
+daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU"}, inplace= True)
 
 #Create heading for Streamlit App
 st.title("Status of COVID-19 Cases in Ontario")
@@ -74,7 +74,7 @@ kpicol4.metric("Seven Day Average",int(latest_data["Seven Day Average"]),int(lat
 
 #Create a Dataframe to Plot All-Time Daily Stats
 st.header("Daily Trends")
-daily_cases_trend = daily_cases[["Reported Date","Total New Cases","Seven Day Average"]]
+daily_cases_trend = daily_cases[["Reported Date","Total New Cases","Seven Day Average","Hospitalized"]]
 
 #Create a Date Picker to Filter the Daily Case Charts
 date_vals = (daily_cases_trend["Reported Date"].min(),daily_cases_trend["Reported Date"].max())
@@ -88,17 +88,17 @@ daily_cases_trend = daily_cases_trend.loc[mask]
 
 #Use Plotly to Format Chart
 daily_cases_trend_chart = px.line(daily_cases_trend, 
-    x="Reported Date", y=["Total New Cases","Seven Day Average"],
-    color_discrete_sequence=["#9c9c9c","#fc7e00"],
+    x="Reported Date", y=["Total New Cases","Hospitalized"],
+    color_discrete_sequence=["#fc7e00","#87dbff"], #Removed 7 day average - hex is "#9c9c9c"
     labels={"Reported Date":"","value":"Total Cases","variable":"Measure Name"},
-    title="Total Confirmed Cases by Day"
+    title="Total Confirmed Cases and Hospitalized by Day"
     )
 
 trendcol1.plotly_chart(daily_cases_trend_chart,use_container_width=True)
 
 #Plot Daily Deaths
 #Create Dataframe for Daily Deaths
-death_trending = daily_cases[["Reported Date","Total New Deaths"]]
+death_trending = daily_cases[["Reported Date","Total New Deaths","In ICU"]]
 
 #Add 7 Day Mean to Death Trend
 death_trending["Seven Day Average"] = death_trending["Total New Deaths"].rolling(7).mean()
@@ -108,11 +108,33 @@ death_trending = death_trending.loc[mask]
 
 #Use Plotly to Format Chart
 daily_death_trend_chart = px.line(death_trending, 
-    x="Reported Date", y=["Total New Deaths","Seven Day Average"],
-    color_discrete_sequence=["#9c9c9c","#ff0000"],
-    labels={"Reported Date":"","value":"Total Deaths","variable":"Measure Name"},
-    title="Total Deaths by Day"
+    x="Reported Date", y=["Total New Deaths","In ICU"],
+    color_discrete_sequence=["#ff0000","#0074a6"],
+    labels={"Reported Date":"","value":"Total","variable":"Measure Name"},
+    title="Total ICU & Deaths by Day"
     )
 
 #Plot the Death Trends
 trendcol2.plotly_chart(daily_death_trend_chart, use_container_width=True)
+
+
+
+# #Detailed COVID info is a massive file.
+# #Re-use existing function to import data, but with groupings and caching
+# st.header("Detailed Breakdown of Confirmed Cases in Ontario")
+
+# @st.cache(suppress_st_warning=True)
+# def import_large_data(path,date_col,columns):
+#     df = pd.read_csv(path)
+#     df = df[columns]
+#     df[date_col] = pd.to_datetime(df[date_col]).dt.date
+#     df = df.sort_values(by=date_col)
+#     df = df.groupby(grouping_columns).count()
+#     return df
+
+# #Detailed Info on Confirmed Positive Cases in Ontario
+# covid_details = 'https://data.ontario.ca/dataset/f4112442-bdc8-45d2-be3c-12efae72fb27/resource/455fd63b-603d-4608-8216-7d8647f43350/download/conposcovidloc.csv'
+# covid_details_columns = ["Case_Reported_Date","Reporting_PHU_City","Age_Group","Client_Gender","Case_AcquisitionInfo","Outcome1","Reporting_PHU_Latitude","Reporting_PHU_Longitude"]
+# grouping_columns = ["Reporting_PHU_City","Reporting_PHU_Latitude","Reporting_PHU_Longitude","Client_Gender","Age_Group","Case_AcquisitionInfo","Outcome1",]
+# daily_details = import_large_data(covid_details,"Case_Reported_Date",covid_details_columns)
+
