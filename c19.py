@@ -68,12 +68,8 @@ daily_cases_trend = daily_cases[["Reported Date","Total New Cases","Seven Day Av
 
 #Create a Date Picker to Filter the Daily Case Charts
 date_vals = (daily_cases_trend["Reported Date"].min(),daily_cases_trend["Reported Date"].max())
-start_date, end_date = st.date_input("Select a Time Frame",date_vals)
+start_date, end_date = st.slider("Select a Time Frame",value= date_vals)
 
-if start_date < end_date: #Ensure Start Date is Not Greater Than End Date
-    pass
-else:
-    st.error('Start Date is Greater Than End Date')
 
 mask = (daily_cases_trend["Reported Date"]>= start_date) & (daily_cases_trend["Reported Date"]<= end_date)
 
