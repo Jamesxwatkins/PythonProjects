@@ -3,6 +3,7 @@ import streamlit as st
 from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
 import datetime
 import plotly.express as px
+import time
 
 # create a function that reads in a csv, selects relevant columns, formats a date, and then sorts by that date
 def import_data(path,date_col,columns):
@@ -19,7 +20,6 @@ st.set_page_config(layout="wide")
 covid_status = 'https://data.ontario.ca/dataset/f4f86e54-872d-43f8-8a86-3892fd3cb5e6/resource/ed270bb8-340b-41f9-a7c6-e8ef587e6d11/download/covidtesting.csv'
 covid_status_columns = ["Reported Date","Total Cases","Percent positive tests in last day","Resolved","Deaths"]
 daily_cases = import_data(covid_status,"Reported Date",covid_status_columns)
-
 
 
 #Calculate New Cases as Well as Previous Day New Cases to Get the Difference
@@ -80,7 +80,8 @@ daily_cases_trend = daily_cases[["Reported Date","Total New Cases","Seven Day Av
 date_vals = (daily_cases_trend["Reported Date"].min(),daily_cases_trend["Reported Date"].max())
 
 start_date, end_date = st.slider("Select a Time Frame",value= date_vals)
-
+#Add Columns to charts
+trendcol1,trendcol2 = st.columns(2)
 mask = (daily_cases_trend["Reported Date"]>= start_date) & (daily_cases_trend["Reported Date"]<= end_date)
 
 daily_cases_trend = daily_cases_trend.loc[mask]
@@ -93,7 +94,7 @@ daily_cases_trend_chart = px.line(daily_cases_trend,
     title="Total Confirmed Cases by Day"
     )
 
-st.plotly_chart(daily_cases_trend_chart,use_container_width=True)
+trendcol1.plotly_chart(daily_cases_trend_chart,use_container_width=True)
 
 #Plot Daily Deaths
 #Create Dataframe for Daily Deaths
@@ -114,4 +115,26 @@ daily_death_trend_chart = px.line(death_trending,
     )
 
 #Plot the Death Trends
-st.plotly_chart(daily_death_trend_chart, use_container_width=True)
+trendcol2.plotly_chart(daily_death_trend_chart, use_container_width=True)
+
+
+#Detailed COVID info is a massive file.
+#Re-use existing function to import data, but with groupings and caching
+st.header("Detailed Breakdown of Confirmed Cases in Ontario")
+
+@st.cache(suppress_st_warning=True)
+def import_large_data(path,date_col,columns):
+    df = pd.read_csv(path)
+    df = df[columns]
+    df[date_col] = pd.to_datetime(df[date_col]).dt.date
+    df = df.sort_values(by=date_col)
+    df = df.groupby(grouping_columns).count()
+    return df
+
+#Detailed Info on Confirmed Positive Cases in Ontario
+covid_details = 'https://data.ontario.ca/dataset/f4112442-bdc8-45d2-be3c-12efae72fb27/resource/455fd63b-603d-4608-8216-7d8647f43350/download/conposcovidloc.csv'
+covid_details_columns = ["Case_Reported_Date","Reporting_PHU_City","Age_Group","Client_Gender","Case_AcquisitionInfo","Outcome1","Reporting_PHU_Latitude","Reporting_PHU_Longitude"]
+grouping_columns = ["Reporting_PHU_City","Reporting_PHU_Latitude","Reporting_PHU_Longitude","Client_Gender","Age_Group","Case_AcquisitionInfo","Outcome1",]
+daily_details = import_large_data(covid_details,"Case_Reported_Date",covid_details_columns)
+
+st.write(daily_details)
