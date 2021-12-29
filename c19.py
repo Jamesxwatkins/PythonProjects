@@ -112,7 +112,6 @@ daily_death_trend_chart = px.line(death_trending,
     labels={"Reported Date":"","value":"Total Deaths","variable":"Measure Name"}
     )
 
-
 #Plot the Death Trends
 st.subheader("Total Deaths by Day")
 st.plotly_chart(daily_death_trend_chart, use_container_width=True)
