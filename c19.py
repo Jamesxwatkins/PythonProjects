@@ -3,9 +3,9 @@ import streamlit as st
 from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
 import datetime
 import plotly.express as px
-import time
 
-# create a function that reads in a csv, selects relevant columns, formats a date, and then sorts by that date
+
+# Create a Function That Reads in a csv, Selects Relevant Columns, Formats a Date, and Then Sorts by That Date
 def import_data(path,date_col,columns):
     df = pd.read_csv(path)
     df = df[columns]
@@ -116,25 +116,3 @@ daily_death_trend_chart = px.line(death_trending,
 
 #Plot the Death Trends
 trendcol2.plotly_chart(daily_death_trend_chart, use_container_width=True)
-
-
-#Detailed COVID info is a massive file.
-#Re-use existing function to import data, but with groupings and caching
-st.header("Detailed Breakdown of Confirmed Cases in Ontario")
-
-@st.cache(suppress_st_warning=True)
-def import_large_data(path,date_col,columns):
-    df = pd.read_csv(path)
-    df = df[columns]
-    df[date_col] = pd.to_datetime(df[date_col]).dt.date
-    df = df.sort_values(by=date_col)
-    df = df.groupby(grouping_columns).count()
-    return df
-
-#Detailed Info on Confirmed Positive Cases in Ontario
-covid_details = 'https://data.ontario.ca/dataset/f4112442-bdc8-45d2-be3c-12efae72fb27/resource/455fd63b-603d-4608-8216-7d8647f43350/download/conposcovidloc.csv'
-covid_details_columns = ["Case_Reported_Date","Reporting_PHU_City","Age_Group","Client_Gender","Case_AcquisitionInfo","Outcome1","Reporting_PHU_Latitude","Reporting_PHU_Longitude"]
-grouping_columns = ["Reporting_PHU_City","Reporting_PHU_Latitude","Reporting_PHU_Longitude","Client_Gender","Age_Group","Case_AcquisitionInfo","Outcome1",]
-daily_details = import_large_data(covid_details,"Case_Reported_Date",covid_details_columns)
-
-st.write(daily_details)
