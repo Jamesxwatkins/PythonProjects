@@ -153,12 +153,14 @@ current_age_breakdown = current_age_breakdown[["Reported Date","Age Group"]]
 current_age_breakdown = current_age_breakdown.groupby(["Age Group"]).count()
 current_age_breakdown.rename(columns={"Reported Date":"Total"}, inplace=True)
 current_age_breakdown = current_age_breakdown.reset_index()
+current_age_breakdown = current_age_breakdown.sort_values(["Total"], ascending=[True])
 current_age_breakdown = px.bar(current_age_breakdown,
-     x="Age Group", y="Total",
+     x="Total", y="Age Group",
      color_discrete_sequence=["#fc7e00"],
      labels={"Age Group":"","Total":"Total Cases"},
      #title="Total Unresolved Cases by Age Group",
-     text="Total"
+     text="Total",
+     orientation="h"
      )
 
 
@@ -185,3 +187,13 @@ detail_chart1.subheader("Total Cases by Age Group")
 detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
 detail_chart2.subheader("7 Day Average of Cases by Age Group by Day")
 detail_chart2.plotly_chart(age_trend,use_container_width=True)
+
+
+
+
+
+
+# #test expander
+# with st.expander("About The Author"):
+#     st.write("Testing Some Text That I'll Eventually Write About Myself")
+
