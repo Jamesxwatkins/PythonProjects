@@ -20,7 +20,8 @@ st.set_page_config(layout="wide")
 
 #Daily COVID-19 Cases in Ontario
 covid_status = 'https://data.ontario.ca/dataset/f4f86e54-872d-43f8-8a86-3892fd3cb5e6/resource/ed270bb8-340b-41f9-a7c6-e8ef587e6d11/download/covidtesting.csv'
-covid_status_columns = ["Reported Date","Total Cases","Percent positive tests in last day","Resolved","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Deaths"]
+covid_status_columns = ["Reported Date","Total Cases","Percent positive tests in last day","Resolved","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Deaths",\
+    "Total tests completed in the last day"]
 daily_cases = import_data(covid_status,"Reported Date",covid_status_columns)
 
 
@@ -47,13 +48,16 @@ daily_cases["Total New Deaths"] = daily_cases["Deaths"] - daily_cases["Deaths"].
 #Get Increase/Decrease from Previous Day
 daily_cases["Increase in Deaths"] = daily_cases["Total New Deaths"] - (daily_cases["Total New Deaths"].shift()-daily_cases["Total New Deaths"].shift(2))
 
+#As of Dec 30, the Science Advisory Table Suggests Only 1/8 Cases are Being Reported. Add an Approximate Case Count From That
+daily_cases["Approximate Cases"] = daily_cases["Total New Cases"] * 8
+
+
 #Replace NaN Values With 0
 daily_cases = daily_cases.fillna(0)
 
 #Re-Organize Columns
 
-daily_cases = daily_cases[["Reported Date","Total New Cases","Increase in Cases","Percent positive tests in last day","Increase in Positivity",
-    "Seven Day Average","Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths"]]
+daily_cases = daily_cases[["Reported Date","Total New Cases","Approximate Cases","Increase in Cases","Percent positive tests in last day",,"Increase in Positivity","Seven Day Average","Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths"]]
 
 daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU"}, inplace= True)
 
@@ -74,6 +78,13 @@ kpicol1.metric("Total Active Cases",int(latest_data["Total Active"]),int(latest_
 kpicol2.metric("Total New Cases",int(latest_data["Total New Cases"]),int(latest_data["Increase in Cases"]),delta_color="inverse")
 kpicol3.metric("Positivity Rate %",latest_data["Positivity Rate"],int(latest_data["Increase in Positivity"]),delta_color="inverse")
 kpicol4.metric("Seven Day Average",int(latest_data["Seven Day Average"]),int(latest_data["Increase in Seven Day Average"]),delta_color="inverse")
+
+#Get Latest Values for Total Cases and Approximate Cases
+todays_actual_cases = int(latest_data["Total New Cases"].iloc[-1])
+todays_approximate_cases = int(latest_data["Approximate Cases"].iloc[-1])
+
+st.caption("**NOTE:** As of December 30th 2021, the Ontario Science Table is estimating that approximately **1 in 8 cases are being reported**. Based on todays total of **{}** cases, we may actually be seeing upwards of **~{}** cases."\
+    .format(todays_actual_cases,todays_approximate_cases))
 
 #Create a Dataframe to Plot All-Time Daily Stats
 st.header("Daily Trends")
@@ -234,7 +245,7 @@ acquisition_trend = px.line(acquisition_trend,
 detail_chart3, detail_chart4 = st.columns(2)
 detail_chart3.subheader("% Total Cases by Acquisition Type*")
 detail_chart3.plotly_chart(acquisition_overview,use_container_width=True)
-st.caption("* Excluding Case Counts Where Acquisition Type is Missing")
+st.caption("'*' Excluding Case Counts Where Acquisition Type is Missing")
 detail_chart4.subheader("Total Cases by Acquisition Type by Day*")
 detail_chart4.plotly_chart(acquisition_trend,use_container_width=True)
 
