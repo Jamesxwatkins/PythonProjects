@@ -168,8 +168,8 @@ age_trend = daily_details.copy()
 age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
 age_trend = age_trend.groupby(["Reported Date","Age Group"])["Row_ID"].count().reset_index()\
         .rename(columns={"Row_ID":"Total"})
-
-age_trend = px.area(age_trend,
+age_trend["Total"] = age_trend["Total"].rolling(7).mean()
+age_trend = px.line(age_trend,
      x="Reported Date", y="Total", 
      color='Age Group',
      labels={"Reported Date":"","Total":"Total Cases"}
@@ -183,5 +183,5 @@ age_trend = px.area(age_trend,
 detail_chart1,detail_chart2 = st.columns(2)
 detail_chart1.subheader("Total Cases by Age Group")
 detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
-detail_chart2.subheader("Total Cases by Age Group by Day")
+detail_chart2.subheader("7 Day Average of Cases by Age Group by Day")
 detail_chart2.plotly_chart(age_trend,use_container_width=True)
