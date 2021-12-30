@@ -124,7 +124,8 @@ trendcol2.plotly_chart(daily_death_trend_chart, use_container_width=True)
 
 
 #Detailed COVID info is a massive file.
-#Re-use existing function to import data, but with groupings and caching
+#Re-use existing function to import data, but isolate to current month
+#and Include Caching
 #Temporary Idea - Limit Size to Current Month or Max Month
 st.header("Detailed Breakdown of Confirmed Cases in Ontario This Month")
 
@@ -135,7 +136,7 @@ def import_large_data(path,date_col,columns):
     df[date_col] = pd.to_datetime(df[date_col]).dt.date
     df["Month"] = df[date_col] + pd.offsets.MonthEnd(0)
     df = df.sort_values(by=date_col)
-    df = df[(df["Month"]== df["Month"].max())]
+    df = df.loc[(df["Month"]== df["Month"].max())]
     return df
 
 
@@ -143,28 +144,29 @@ def import_large_data(path,date_col,columns):
 covid_details = 'https://data.ontario.ca/dataset/f4112442-bdc8-45d2-be3c-12efae72fb27/resource/455fd63b-603d-4608-8216-7d8647f43350/download/conposcovidloc.csv'
 covid_details_columns = ["Case_Reported_Date","Reporting_PHU_City","Age_Group","Client_Gender","Case_AcquisitionInfo","Outcome1","Reporting_PHU_Latitude","Reporting_PHU_Longitude","Row_ID"]
 daily_details = import_large_data(covid_details,"Case_Reported_Date",covid_details_columns)
-daily_details.rename(columns={"Case_Reported_Date":"Reported Date","Reporting_PHU_City":"City","Age_Group":"Age Group","Client_Gender":"Gender","Outcome1":"Outcome"}, inplace=True)
+daily_details.rename(columns={"Case_Reported_Date":"Reported Date","Reporting_PHU_City":"City","Age_Group":"Age Group","Client_Gender":"Gender","Outcome1":"Outcome","Case_AcquisitionInfo":"Acquisition Type"}, inplace=True)
 
 
-#Create a Dataframe and Chart for Cases by Age Group for Latest Date
+#Create a Dataframe and Chart for Cases by Age Group
 current_age_breakdown = daily_details.copy()
-# current_age_breakdown = current_age_breakdown[(current_age_breakdown['Reported Date'] == current_age_breakdown['Reported Date'].max())] 
 current_age_breakdown = current_age_breakdown[["Reported Date","Age Group"]]
 current_age_breakdown = current_age_breakdown.groupby(["Age Group"]).count()
 current_age_breakdown.rename(columns={"Reported Date":"Total"}, inplace=True)
 current_age_breakdown = current_age_breakdown.reset_index()
-current_age_breakdown = current_age_breakdown.sort_values(["Total"], ascending=[True])
+current_age_breakdown["Percentage of Total"] = (current_age_breakdown["Total"] / current_age_breakdown["Total"].sum())*100
+current_age_breakdown["Percentage of Total"] = current_age_breakdown["Percentage of Total"].round(2)
+current_age_breakdown = current_age_breakdown.sort_values(["Percentage of Total"], ascending=[True])
 current_age_breakdown = px.bar(current_age_breakdown,
-     x="Total", y="Age Group",
+     x="Percentage of Total", y="Age Group",
      color_discrete_sequence=["#fc7e00"],
      labels={"Age Group":"","Total":"Total Cases"},
      #title="Total Unresolved Cases by Age Group",
-     text="Total",
+     text="Percentage of Total",
      orientation="h"
      )
 
 
-#Create a Dataframe and Chart for Cases by Age Group
+#Create a Dataframe and Chart for Cases by Age Group by Day
 age_trend = daily_details.copy()
 # age_trend = age_trend[(age_trend['Outcome'] == "Not Resolved")] 
 age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
@@ -178,17 +180,61 @@ age_trend = px.line(age_trend,
      )
 
 
-
-
-
 #Create Columns for Charts
 detail_chart1,detail_chart2 = st.columns(2)
-detail_chart1.subheader("Total Cases by Age Group")
+detail_chart1.subheader("% Total Cases by Age Group")
 detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
 detail_chart2.subheader("7 Day Average of Cases by Age Group by Day")
 detail_chart2.plotly_chart(age_trend,use_container_width=True)
 
 
+#Create a View for Acquisition of Confirmed Cases
+acquisition = daily_details.copy()
+acquisition = acquisition[["Reported Date","Acquisition Type","Row_ID"]]
+
+#Format Acquisition Labels to be More Readable
+acquisition.loc[acquisition["Acquisition Type"]=="CC", 'Acquisition Type'] = "Close Contact"
+acquisition.loc[acquisition["Acquisition Type"]=="OB", 'Acquisition Type'] = "Outbreak"
+acquisition.loc[acquisition["Acquisition Type"]=="NO KNOWN EPI LINK", 'Acquisition Type'] = "Community Spread"
+acquisition.loc[acquisition["Acquisition Type"]=="MISSING INFORMATION", 'Acquisition Type'] = "Missing Information"
+acquisition.loc[acquisition["Acquisition Type"]=="TRAVEL", 'Acquisition Type'] = "Travel"
+acquisition = acquisition.loc[(acquisition["Acquisition Type"]!= "Missing Information")]
+
+#Create a Dataframe and Chart for Cases by Acquisition Type
+acquisition_overview = acquisition.copy()
+acquisition_overview = acquisition_overview.groupby(["Acquisition Type"])["Row_ID"].count().reset_index()\
+        .rename(columns={"Row_ID":"Total"})
+acquisition_overview["Percentage of Total"] = (acquisition_overview["Total"] / acquisition_overview["Total"].sum())*100
+acquisition_overview["Percentage of Total"] = acquisition_overview["Percentage of Total"].round(2)
+acquisition_overview = acquisition_overview.sort_values(["Percentage of Total"], ascending=[True])
+acquisition_overview = px.bar(acquisition_overview,
+     x="Percentage of Total", y="Acquisition Type",
+     color_discrete_sequence=["#fc7e00"],
+     labels={"Acquisition Type":"","Total":"Total Cases"},
+     #title="Total Unresolved Cases by Age Group",
+     text="Percentage of Total",
+     orientation="h"
+     )
+
+
+#Create a Dataframe and Chart for Cases by Acquisition Type by Day
+acquisition_trend = acquisition.copy()
+acquisition_trend = acquisition_trend.groupby(["Reported Date","Acquisition Type"])["Row_ID"].count().reset_index()\
+        .rename(columns={"Row_ID":"Total"})
+acquisition_trend = px.line(acquisition_trend,
+     x="Reported Date", y="Total", 
+     color='Acquisition Type',
+     labels={"Reported Date":"","Total":"Total Cases"}
+     )
+
+
+#Create Columns for Charts
+detail_chart3, detail_chart4 = st.columns(2)
+detail_chart3.subheader("% Total Cases by Acquisition Type*")
+detail_chart3.plotly_chart(acquisition_overview,use_container_width=True)
+st.caption("* Excluding Case Counts Where Acquisition Type is Missing")
+detail_chart4.subheader("Total Cases by Acquisition Type by Day*")
+detail_chart4.plotly_chart(acquisition_trend,use_container_width=True)
 
 
 
