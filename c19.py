@@ -176,6 +176,7 @@ age_trend["Total"] = age_trend["Total"].rolling(7).mean() #Convert Total to 7 Da
 age_trend = px.line(age_trend,
      x="Reported Date", y="Total", 
      color='Age Group',
+     color_discrete_sequence=px.colors.qualitative.Vivid,
      labels={"Reported Date":"","Total":"7 Day Avg."}
      )
 
@@ -224,6 +225,7 @@ acquisition_trend = acquisition_trend.groupby(["Reported Date","Acquisition Type
 acquisition_trend = px.line(acquisition_trend,
      x="Reported Date", y="Total", 
      color='Acquisition Type',
+     color_discrete_sequence=px.colors.qualitative.Antique,
      labels={"Reported Date":"","Total":"Total Cases"}
      )
 
