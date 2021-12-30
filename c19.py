@@ -56,10 +56,10 @@ daily_cases["Approximate Cases"] = daily_cases["Total New Cases"] * 8
 daily_cases = daily_cases.fillna(0)
 
 #Re-Organize Columns
+daily_cases = daily_cases[["Reported Date","Total New Cases","Approximate Cases","Increase in Cases","Percent positive tests in last day","Total tests completed in the last day","Increase in Positivity","Seven Day Average",
+    "Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths"]]
 
-daily_cases = daily_cases[["Reported Date","Total New Cases","Approximate Cases","Increase in Cases","Percent positive tests in last day",,"Increase in Positivity","Seven Day Average","Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths"]]
-
-daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU"}, inplace= True)
+daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU","Total tests completed in the last day":"Total Tests"}, inplace= True)
 
 #Create heading for Streamlit App
 st.title("Status of COVID-19 Cases in Ontario")
