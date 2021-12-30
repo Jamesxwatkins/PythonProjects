@@ -3,6 +3,8 @@ import streamlit as st
 from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
 import datetime
 import plotly.express as px
+from streamlit.elements import text
+
 
 
 # Create a Function That Reads in a csv, Selects Relevant Columns, Formats a Date, and Then Sorts by That Date
@@ -62,7 +64,8 @@ st.caption("This application shows the current status of covid-19 cases in Ontar
      https://data.ontario.ca/dataset/status-of-covid-19-cases-in-ontario. This application is for information purposes only.")
 
 #Get the Most Recent Data to Show as an Overview
-latest_data = daily_cases[(daily_cases["Reported Date"]== daily_cases["Reported Date"].max())]
+latest_data = daily_cases.copy()
+latest_data = latest_data[(latest_data["Reported Date"]== latest_data["Reported Date"].max())]
 st.header("Current Snapshot for "+str(latest_data["Reported Date"].max()))
 
 #Add Columns and Display KPI's. **Note: Deltas are inversed as in this case, an increase is bad.**
@@ -74,7 +77,8 @@ kpicol4.metric("Seven Day Average",int(latest_data["Seven Day Average"]),int(lat
 
 #Create a Dataframe to Plot All-Time Daily Stats
 st.header("Daily Trends")
-daily_cases_trend = daily_cases[["Reported Date","Total New Cases","Seven Day Average","Hospitalized"]]
+daily_cases_trend = daily_cases.copy()
+daily_cases_trend = daily_cases_trend[["Reported Date","Total New Cases","Seven Day Average","Hospitalized"]]
 
 #Create a Date Picker to Filter the Daily Case Charts
 date_vals = (daily_cases_trend["Reported Date"].min(),daily_cases_trend["Reported Date"].max())
@@ -91,17 +95,16 @@ daily_cases_trend_chart = px.line(daily_cases_trend,
     x="Reported Date", y=["Total New Cases","Hospitalized"],
     color_discrete_sequence=["#fc7e00","#87dbff"], #Removed 7 day average - hex is "#9c9c9c"
     labels={"Reported Date":"","value":"Total Cases","variable":"Measure Name"},
-    title="Total Confirmed Cases and Hospitalized by Day"
+    #title="Total Confirmed Cases and Hospitalized by Day"
     )
 
+trendcol1.subheader("Total Confirmed Cases and Hospitalized by Day")
 trendcol1.plotly_chart(daily_cases_trend_chart,use_container_width=True)
 
 #Plot Daily Deaths
 #Create Dataframe for Daily Deaths
-death_trending = daily_cases[["Reported Date","Total New Deaths","In ICU"]]
-
-#Add 7 Day Mean to Death Trend
-death_trending["Seven Day Average"] = death_trending["Total New Deaths"].rolling(7).mean()
+death_trending = daily_cases.copy()
+death_trending = death_trending[["Reported Date","Total New Deaths","In ICU"]]
 
 #Apply the Same Filtering as Daily Cases and Set Date as Index
 death_trending = death_trending.loc[mask]
@@ -111,30 +114,74 @@ daily_death_trend_chart = px.line(death_trending,
     x="Reported Date", y=["Total New Deaths","In ICU"],
     color_discrete_sequence=["#ff0000","#0074a6"],
     labels={"Reported Date":"","value":"Total","variable":"Measure Name"},
-    title="Total ICU & Deaths by Day"
+    #title="Total ICU & Deaths by Day"
     )
 
+
 #Plot the Death Trends
+trendcol2.subheader("Total ICU & Deaths by Day")
 trendcol2.plotly_chart(daily_death_trend_chart, use_container_width=True)
 
 
+#Detailed COVID info is a massive file.
+#Re-use existing function to import data, but with groupings and caching
+#Temporary Idea - Limit Size to Current Month or Max Month
+st.header("Detailed Breakdown of Confirmed Cases in Ontario This Month")
 
-# #Detailed COVID info is a massive file.
-# #Re-use existing function to import data, but with groupings and caching
-# st.header("Detailed Breakdown of Confirmed Cases in Ontario")
+@st.cache
+def import_large_data(path,date_col,columns):
+    df = pd.read_csv(path)
+    df = df[columns]
+    df[date_col] = pd.to_datetime(df[date_col]).dt.date
+    df["Month"] = df[date_col] + pd.offsets.MonthEnd(0)
+    df = df.sort_values(by=date_col)
+    df = df[(df["Month"]== df["Month"].max())]
+    return df
 
-# @st.cache(suppress_st_warning=True)
-# def import_large_data(path,date_col,columns):
-#     df = pd.read_csv(path)
-#     df = df[columns]
-#     df[date_col] = pd.to_datetime(df[date_col]).dt.date
-#     df = df.sort_values(by=date_col)
-#     df = df.groupby(grouping_columns).count()
-#     return df
 
-# #Detailed Info on Confirmed Positive Cases in Ontario
-# covid_details = 'https://data.ontario.ca/dataset/f4112442-bdc8-45d2-be3c-12efae72fb27/resource/455fd63b-603d-4608-8216-7d8647f43350/download/conposcovidloc.csv'
-# covid_details_columns = ["Case_Reported_Date","Reporting_PHU_City","Age_Group","Client_Gender","Case_AcquisitionInfo","Outcome1","Reporting_PHU_Latitude","Reporting_PHU_Longitude"]
-# grouping_columns = ["Reporting_PHU_City","Reporting_PHU_Latitude","Reporting_PHU_Longitude","Client_Gender","Age_Group","Case_AcquisitionInfo","Outcome1",]
-# daily_details = import_large_data(covid_details,"Case_Reported_Date",covid_details_columns)
+#Detailed Info on Confirmed Positive Cases in Ontario
+covid_details = 'https://data.ontario.ca/dataset/f4112442-bdc8-45d2-be3c-12efae72fb27/resource/455fd63b-603d-4608-8216-7d8647f43350/download/conposcovidloc.csv'
+covid_details_columns = ["Case_Reported_Date","Reporting_PHU_City","Age_Group","Client_Gender","Case_AcquisitionInfo","Outcome1","Reporting_PHU_Latitude","Reporting_PHU_Longitude","Row_ID"]
+daily_details = import_large_data(covid_details,"Case_Reported_Date",covid_details_columns)
+daily_details.rename(columns={"Case_Reported_Date":"Reported Date","Reporting_PHU_City":"City","Age_Group":"Age Group","Client_Gender":"Gender","Outcome1":"Outcome"}, inplace=True)
 
+
+#Create a Dataframe and Chart for Cases by Age Group for Latest Date
+current_age_breakdown = daily_details.copy()
+# current_age_breakdown = current_age_breakdown[(current_age_breakdown['Reported Date'] == current_age_breakdown['Reported Date'].max())] 
+current_age_breakdown = current_age_breakdown[["Reported Date","Age Group"]]
+current_age_breakdown = current_age_breakdown.groupby(["Age Group"]).count()
+current_age_breakdown.rename(columns={"Reported Date":"Total"}, inplace=True)
+current_age_breakdown = current_age_breakdown.reset_index()
+current_age_breakdown = px.bar(current_age_breakdown,
+     x="Age Group", y="Total",
+     color_discrete_sequence=["#fc7e00"],
+     labels={"Age Group":"","Total":"Total Cases"},
+     #title="Total Unresolved Cases by Age Group",
+     text="Total"
+     )
+
+
+#Create a Dataframe and Chart for Cases by Age Group
+age_trend = daily_details.copy()
+# age_trend = age_trend[(age_trend['Outcome'] == "Not Resolved")] 
+age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
+age_trend = age_trend.groupby(["Reported Date","Age Group"])["Row_ID"].count().reset_index()\
+        .rename(columns={"Row_ID":"Total"})
+
+age_trend = px.area(age_trend,
+     x="Reported Date", y="Total", 
+     color='Age Group',
+     labels={"Reported Date":"","Total":"Total Cases"}
+     )
+
+
+
+
+
+#Create Columns for Charts
+detail_chart1,detail_chart2 = st.columns(2)
+detail_chart1.subheader("Total Cases by Age Group")
+detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
+detail_chart2.subheader("Total Cases by Age Group by Day")
+detail_chart2.plotly_chart(age_trend,use_container_width=True)
