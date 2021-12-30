@@ -168,11 +168,11 @@ age_trend = daily_details.copy()
 age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
 age_trend = age_trend.groupby(["Reported Date","Age Group"])["Row_ID"].count().reset_index()\
         .rename(columns={"Row_ID":"Total"})
-age_trend["Total"] = age_trend["Total"].rolling(7).mean()
+age_trend["Total"] = age_trend["Total"].rolling(7).mean() #Convert Total to 7 Day Mean
 age_trend = px.line(age_trend,
      x="Reported Date", y="Total", 
      color='Age Group',
-     labels={"Reported Date":"","Total":"Total Cases"}
+     labels={"Reported Date":"","Total":"7 Day Avg."}
      )
 
 
