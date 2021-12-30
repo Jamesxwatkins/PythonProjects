@@ -305,8 +305,8 @@ st.caption("'*' Excluding Case Counts Where Acquisition Type is Missing")
 detail_chart4.subheader("Daily View of Cases by Acquisition Type*")
 detail_chart4.plotly_chart(acquisition_trend,use_container_width=True)
 
-#Overview on Vaccinations
-st.header("Overall Status of Vaccinations in Ontario")
+# #Overview on Vaccinations
+# st.header("Overall Status of Vaccinations in Ontario")
 
 
 # #test expander
