@@ -206,7 +206,7 @@ st.plotly_chart(vax_cases,use_container_width=True)
 #Temporary Idea - Limit Size to Current Month or Max Month
 st.header("Detailed Breakdown of Confirmed Cases in Ontario This Month")
 
-@st.cache
+@st.experimental_memo
 def import_large_data(path,date_col,columns):
     df = pd.read_csv(path)
     df = df[columns]
@@ -245,26 +245,19 @@ current_age_breakdown = px.bar(current_age_breakdown,
 
 
 #Create a Dataframe and Chart for Cases by Age Group by Day
-age_trend = daily_details.copy()
-# age_trend = age_trend[(age_trend['Outcome'] == "Not Resolved")] 
-age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
-age_trend = age_trend.groupby(["Reported Date","Age Group"])["Row_ID"].count().reset_index()\
-        .rename(columns={"Row_ID":"Total"})
-age_trend["Total"] = age_trend["Total"].rolling(7).mean() #Convert Total to 7 Day Mean
-age_trend = px.line(age_trend,
-     x="Reported Date", y="Total", 
-     color='Age Group',
-     color_discrete_sequence=px.colors.qualitative.Vivid,
-     labels={"Reported Date":"","Total":"7 Day Avg."}
-     )
-
-
-#Create Columns for Charts
-detail_chart1,detail_chart2 = st.columns(2)
-detail_chart1.subheader("% Total Cases by Age Group")
-detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
-detail_chart2.subheader("Daily 7 Day Average of Cases by Age Group")
-detail_chart2.plotly_chart(age_trend,use_container_width=True)
+#Currently Not in Use as Trends Look Weird
+# age_trend = daily_details.copy()
+# # age_trend = age_trend[(age_trend['Outcome'] == "Not Resolved")] 
+# age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
+# age_trend = age_trend.groupby(["Reported Date","Age Group"])["Row_ID"].count().reset_index()\
+#         .rename(columns={"Row_ID":"Total"})
+# age_trend["Total"] = age_trend["Total"].rolling(7).mean() #Convert Total to 7 Day Mean
+# age_trend = px.area(age_trend,
+#      x="Reported Date", y="Total", 
+#      color='Age Group',
+#      color_discrete_sequence=px.colors.qualitative.Vivid,
+#      labels={"Reported Date":"","Total":"7 Day Avg."}
+#      )
 
 
 #Create a View for Acquisition of Confirmed Cases
@@ -297,25 +290,37 @@ acquisition_overview = px.bar(acquisition_overview,
      )
 
 
-#Create a Dataframe and Chart for Cases by Acquisition Type by Day
-acquisition_trend = acquisition.copy()
-acquisition_trend = acquisition_trend.groupby(["Reported Date","Acquisition Type"])["Row_ID"].count().reset_index()\
-        .rename(columns={"Row_ID":"Total"})
-acquisition_trend = px.line(acquisition_trend,
-     x="Reported Date", y="Total", 
-     color='Acquisition Type',
-     color_discrete_sequence=px.colors.qualitative.Antique,
-     labels={"Reported Date":"","Total":"Total Cases"}
-     )
-
-
 #Create Columns for Charts
-detail_chart3, detail_chart4 = st.columns(2)
-detail_chart3.subheader("% Total Cases by Acquisition Type*")
-detail_chart3.plotly_chart(acquisition_overview,use_container_width=True)
+detail_chart1,detail_chart2 = st.columns(2)
+detail_chart1.subheader("% Total Cases by Age Group")
+detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
+detail_chart2.subheader("% Total Cases by Acquisition Type*")
+detail_chart2.plotly_chart(acquisition_overview,use_container_width=True)
+# detail_chart2.plotly_chart(age_trend,use_container_width=True)
+
+
+
+
+#Create a Dataframe and Chart for Cases by Acquisition Type by Day
+#Currently Not in Use as Trends Look Weird
+# acquisition_trend = acquisition.copy()
+# acquisition_trend = acquisition_trend.groupby(["Reported Date","Acquisition Type"])["Row_ID"].count().reset_index()\
+#         .rename(columns={"Row_ID":"Total"})
+# acquisition_trend = px.line(acquisition_trend,
+#      x="Reported Date", y="Total", 
+#      color='Acquisition Type',
+#      color_discrete_sequence=px.colors.qualitative.Antique,
+#      labels={"Reported Date":"","Total":"Total Cases"}
+#      )
+
+
+# #Create Columns for Charts
+# detail_chart3, detail_chart4 = st.columns(2)
+# detail_chart3.subheader("% Total Cases by Acquisition Type*")
+# detail_chart3.plotly_chart(acquisition_overview,use_container_width=True)
 st.caption("'*' Excluding Case Counts Where Acquisition Type is Missing")
-detail_chart4.subheader("Daily View of Cases by Acquisition Type*")
-detail_chart4.plotly_chart(acquisition_trend,use_container_width=True)
+# detail_chart4.subheader("Daily View of Cases by Acquisition Type*")
+# # detail_chart4.plotly_chart(acquisition_trend,use_container_width=True)
 
 # #Overview on Vaccinations
 # st.header("Overall Status of Vaccinations in Ontario")
