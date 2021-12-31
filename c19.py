@@ -232,13 +232,14 @@ current_age_breakdown.rename(columns={"Reported Date":"Total"}, inplace=True)
 current_age_breakdown = current_age_breakdown.reset_index()
 current_age_breakdown["Percentage of Total"] = (current_age_breakdown["Total"] / current_age_breakdown["Total"].sum())*100
 current_age_breakdown["Percentage of Total"] = current_age_breakdown["Percentage of Total"].round(2)
+current_age_breakdown["Percentage of Total Label"] = current_age_breakdown["Percentage of Total"].astype(str) + "%"
 current_age_breakdown = current_age_breakdown.sort_values(["Percentage of Total"], ascending=[True])
 current_age_breakdown = px.bar(current_age_breakdown,
      x="Percentage of Total", y="Age Group",
      color_discrete_sequence=["#fc7e00"],
      labels={"Age Group":"","Total":"Total Cases"},
      #title="Total Unresolved Cases by Age Group",
-     text="Percentage of Total",
+     text="Percentage of Total Label",
      orientation="h"
      )
 
@@ -284,13 +285,14 @@ acquisition_overview = acquisition_overview.groupby(["Acquisition Type"])["Row_I
         .rename(columns={"Row_ID":"Total"})
 acquisition_overview["Percentage of Total"] = (acquisition_overview["Total"] / acquisition_overview["Total"].sum())*100
 acquisition_overview["Percentage of Total"] = acquisition_overview["Percentage of Total"].round(2)
+acquisition_overview["Percentage of Total Label"] = acquisition_overview["Percentage of Total"].astype(str)+"%"
 acquisition_overview = acquisition_overview.sort_values(["Percentage of Total"], ascending=[True])
 acquisition_overview = px.bar(acquisition_overview,
      x="Percentage of Total", y="Acquisition Type",
      color_discrete_sequence=["#fc7e00"],
      labels={"Acquisition Type":"","Total":"Total Cases"},
      #title="Total Unresolved Cases by Age Group",
-     text="Percentage of Total",
+     text="Percentage of Total Label",
      orientation="h"
      )
 
