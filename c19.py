@@ -97,7 +97,7 @@ daily_cases_trend = daily_cases_trend[["Reported Date","Total New Cases","Seven 
 date_vals = (daily_cases_trend["Reported Date"].min(),daily_cases_trend["Reported Date"].max())
 
 start_date, end_date = st.slider("Select a Time Frame",value= date_vals)
-#Add Columns to charts
+#Create a Mask to Filter the Dataframe by Slider Values
 trendcol1,trendcol2 = st.columns(2)
 mask = (daily_cases_trend["Reported Date"]>= start_date) & (daily_cases_trend["Reported Date"]<= end_date)
 
@@ -178,15 +178,25 @@ unknown.metric("Percentage Unknown",str(latest_vaccination_cases["Percent Unknow
 
 #Create a Visual of Cases Per 100k by Status
 daily_vax_cases = vaccination_cases.copy()
+
+#Create a Date Picker to Filter the Daily Vax Case Chart
+vax_date_vals = (daily_vax_cases["Reported Date"].min(),daily_vax_cases["Reported Date"].max())
+
+vaxstart_date, vaxend_date = st.slider("Select a Time Frame",value= vax_date_vals)
+
+#Create a Mask to Filter the Dataframe by Slider Values
+vaxmask = (daily_vax_cases["Reported Date"]>= vaxstart_date) & (daily_vax_cases["Reported Date"]<= vaxend_date)
+daily_vax_cases = daily_vax_cases.loc[vaxmask]
+
 daily_vax_cases = daily_vax_cases[["Reported Date","Unvaccinated Rate Per 100k","Full Vaccination Rate Per 100k","Partial Vaccination Rate Per 100k"]]
-vax_cases = px.area(daily_vax_cases, 
+vax_cases = px.line(daily_vax_cases, 
     x="Reported Date", y=["Unvaccinated Rate Per 100k","Full Vaccination Rate Per 100k","Partial Vaccination Rate Per 100k"],
     color_discrete_sequence=["#bebfbb","#00f2b5","#87dbff"], #Removed 7 day average - hex is "#9c9c9c"
     labels={"Reported Date":"","value":"Cases Per 100k","variable":"Measure Name"},
     #title="Total Confirmed Cases and Hospitalized by Day"
     )
 
-st.subheader("Daily Cases Per 100k by Vaccination Status")
+st.subheader("All Time Daily Cases Per 100k by Vaccination Status")
 st.plotly_chart(vax_cases,use_container_width=True)
 
 
