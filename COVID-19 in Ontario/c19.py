@@ -209,7 +209,7 @@ st.plotly_chart(vax_cases,use_container_width=True)
 #Temporary Idea - Limit Size to Current Month or Max Month
 st.header("Detailed Breakdown of Confirmed Cases in Ontario This Month")
 
-@st.experimental_memo
+@st.cache
 def import_large_data(path,date_col,columns):
     df = pd.read_csv(path)
     df = df[columns]
@@ -340,7 +340,7 @@ st.plotly_chart(vaccine_trend,use_container_width=True)
 
 
 # #About me
-image = Image.open("Me.jpeg")
+image = Image.open("Me.jpg")
 linkedin = 'https://www.linkedin.com/in/jamesmwatkins/'
 email ='mailto:jameswatkins@live.com?subject=Your%20Cool%20Streamlit%20Dashboard!'
 
