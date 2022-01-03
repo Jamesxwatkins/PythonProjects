@@ -3,8 +3,9 @@ import streamlit as st
 from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
 import datetime
 import plotly.express as px
-from streamlit.elements import text
+from streamlit.elements import image, text
 from streamlit.proto.Image_pb2 import Image
+from PIL import Image
 
 
 # Create a Function That Reads in a csv, Selects Relevant Columns, Formats a Date, and Then Sorts by That Date
@@ -73,7 +74,7 @@ st.caption("This application shows the current status of covid-19 cases in Ontar
 #Get the Most Recent Data to Show as an Overview
 latest_data = daily_cases.copy()
 latest_data = latest_data[(latest_data["Reported Date"]== latest_data["Reported Date"].max())]
-st.header("Current Snapshot for "+str(latest_data["Reported Date"].max()))
+st.header("Current Snapshot as of "+str(latest_data["Reported Date"].max()))
 
 #Add Columns and Display KPI's. **Note: Deltas are inversed as in this case, an increase is bad.**
 kpicol1,kpicol2,kpicol3,kpicol4 = st.columns(4)
@@ -168,7 +169,7 @@ percent_partially_vaccinated = get_percentage(latest_vaccination_cases,"Percent 
 percent_unknown = get_percentage(latest_vaccination_cases,"Percent Unknown","Total Unkown Vaccine Status Cases")
 
 #Show Latest Cases by Vaccination Status
-st.header("Overview by Vaccination Status for "+str(vaccination_cases["Reported Date"].max()))
+st.header("Overview by Vaccination Status as of "+str(vaccination_cases["Reported Date"].max()))
 
 #Display Latest Cases by Vaccine Status as Metrics in a Single Frame
 full_vax,partial_vax,no_vax,unknown = st.columns(4)
@@ -304,7 +305,7 @@ vaccines.rename(columns={"report_date":"Reported Date"}, inplace=True)
 latest_vaccines = vaccines.copy()
 latest_vaccines = latest_vaccines[(latest_vaccines["Reported Date"] == latest_vaccines["Reported Date"].max())]
 
-st.subheader("Overview of Vaccinations in Ontario for "+str(latest_vaccines["Reported Date"].max()))
+st.subheader("Overview of Vaccinations in Ontario as of "+str(latest_vaccines["Reported Date"].max()))
 
 #Create a Function to Divide Total Vaccines by 1mm and Display as a String
 def show_millions(df,name):
@@ -340,8 +341,19 @@ st.plotly_chart(vaccine_trend,use_container_width=True)
 
 
 # #About me
+image = Image.open("Me.jpeg")
+linkedin = 'https://www.linkedin.com/in/jamesmwatkins/'
+email ='mailto:jameswatkins@live.com?subject=Your%20Cool%20Streamlit%20Dashboard!'
 
-# with st.expander("About Me"):
-#     st.image(image, caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
-#     st.write("Hey! I'm James. ")
-
+st.sidebar.write("The TLDR About Me")
+st.sidebar.image(image, caption=None, width=225, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
+st.sidebar.write("Hey! I'm James. I'm strategic thinker with a knack for visualizing and tackling data driven problems.\
+            Currently, I lead a really great team of Data Analysts at RBC in Toronto.")
+st.sidebar.write("When I am not working, I love hanging out with my\
+            partner and two cats, lifting weights, kickboxing (Muay Thai), and eating all the great food Toronto restaurants have to offer.")
+st.sidebar.write("Over the winter break, I wanted to brush up on some Python and try out Streamlit.\
+            There are a million reports out there that show the breakdown of COVID-19, and while I didnt plan on re-inventing the wheel,\
+            I though it would be cool to try and consolidate a lot of different information into one view.")
+st.sidebar.write("I am not sure how frequent I will iterate on this, though I am open to any feedback or suggestions!")
+st.sidebar.write("Feel free to reach out via [email](%s)"% email)
+st.sidebar.write("Or drop me a connection on [LinkedIn](%s)"% linkedin)
