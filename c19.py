@@ -61,9 +61,11 @@ daily_cases = daily_cases.fillna(0)
 
 #Re-Organize Columns
 daily_cases = daily_cases[["Reported Date","Total New Cases","Approximate Cases","Increase in Cases","Percent positive tests in last day","Total tests completed in the last day","Increase in Positivity","Seven Day Average",
-    "Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths","Positivity Reporting","Increase in Positivity Reporting"]]
+    "Increase in Seven Day Average","Total Active","Increase in Active Cases","Number of patients hospitalized with COVID-19","Number of patients in ICU due to COVID-19","Total New Deaths","Increase in Deaths",
+    "Positivity Reporting","Increase in Positivity Reporting"]]
 
-daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU","Total tests completed in the last day":"Total Tests"}, inplace= True)
+daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU",
+    "Total tests completed in the last day":"Total Tests"}, inplace= True)
 
 #Create heading for Streamlit App
 st.title("Status of COVID-19 Cases in Ontario")
@@ -195,7 +197,6 @@ vax_cases = px.line(daily_vax_cases,
     x="Reported Date", y=["Unvaccinated Rate Per 100k","Full Vaccination Rate Per 100k","Partial Vaccination Rate Per 100k"],
     color_discrete_sequence=["#bebfbb","#00f2b5","#87dbff"], #Removed 7 day average - hex is "#9c9c9c"
     labels={"Reported Date":"","value":"Cases Per 100k","variable":"Measure Name"}
-    
     )
 
 st.subheader("Daily Cases Per 100k by Vaccination Status")
@@ -299,7 +300,8 @@ vaccine_link = 'https://data.ontario.ca/dataset/752ce2b7-c15a-4965-a3dc-397bf405
 vaccine_cols = ["report_date","previous_day_total_doses_administered","previous_day_at_least_one","previous_day_fully_vaccinated","total_doses_administered","total_individuals_at_least_one","total_individuals_partially_vaccinated",
     	"total_doses_in_fully_vaccinated_individuals","total_individuals_fully_vaccinated","total_individuals_3doses"]
 vaccines = import_data(vaccine_link,"report_date",vaccine_cols)
-vaccines.rename(columns={"report_date":"Reported Date"}, inplace=True)
+vaccines.rename(columns={"report_date":"Reported Date","total_individuals_at_least_one":"At Least One Dose","total_individuals_fully_vaccinated":"Double Vaccinated","total_individuals_3doses":"Triple Vaccinated",
+    "total_individuals_partially_vaccinated":"Partially Vaccinated"}, inplace=True)
 #vaccines = vaccines.fillna(0)
 
 latest_vaccines = vaccines.copy()
@@ -315,9 +317,9 @@ def show_millions(df,name):
     return df[name]
 
 #Create a Reporting Column for Total Individuals Vaccinated
-latest_vaccines["Total Double Vaccinated"] = show_millions(latest_vaccines,"total_individuals_fully_vaccinated")
-latest_vaccines["Total Partially Vaccinated"] = show_millions(latest_vaccines,"total_individuals_partially_vaccinated")
-latest_vaccines["Total Triple Vaccinated"] = show_millions(latest_vaccines,"total_individuals_3doses")
+latest_vaccines["Total Double Vaccinated"] = show_millions(latest_vaccines,"Double Vaccinated")
+latest_vaccines["Total Partially Vaccinated"] = show_millions(latest_vaccines,"Partially Vaccinated")
+latest_vaccines["Total Triple Vaccinated"] = show_millions(latest_vaccines,"Triple Vaccinated")
 
 #Display Vaccination Overview as Metrics
 one_dose,two_doses,three_doses = st.columns(3)
@@ -328,16 +330,13 @@ three_doses.metric("Total Triple Vaccinated",str(latest_vaccines["Total Triple V
 
 #Show a Trend of Vaccine Distribution Over Time
 vaccine_trend = px.line(vaccines, 
-    x="Reported Date", y=["total_individuals_at_least_one","total_individuals_fully_vaccinated","total_individuals_3doses"],
-    color_discrete_sequence=["#87dbff","#00f2b5","#ff8e52"], #Removed 7 day average - hex is "#9c9c9c"
+    x="Reported Date", y=["At Least One Dose","Double Vaccinated","Triple Vaccinated"],
+    color_discrete_sequence=["#87dbff","#00f2b5","#ff8e52"], 
     labels={"Reported Date":"","value":"Total Vaccinated","variable":"Measure Name"}
     )
 
+#Plot Daily Vaccinations
 st.plotly_chart(vaccine_trend,use_container_width=True)
-
-
-
-
 
 
 # #About me
