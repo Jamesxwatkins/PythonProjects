@@ -4,6 +4,7 @@ from pandas.core.indexes.datetimelike import DatetimeTimedeltaMixin
 import datetime
 import plotly.express as px
 from streamlit.elements import text
+from streamlit.proto.Image_pb2 import Image
 
 
 # Create a Function That Reads in a csv, Selects Relevant Columns, Formats a Date, and Then Sorts by That Date
@@ -192,11 +193,11 @@ daily_vax_cases = daily_vax_cases[["Reported Date","Unvaccinated Rate Per 100k",
 vax_cases = px.line(daily_vax_cases, 
     x="Reported Date", y=["Unvaccinated Rate Per 100k","Full Vaccination Rate Per 100k","Partial Vaccination Rate Per 100k"],
     color_discrete_sequence=["#bebfbb","#00f2b5","#87dbff"], #Removed 7 day average - hex is "#9c9c9c"
-    labels={"Reported Date":"","value":"Cases Per 100k","variable":"Measure Name"},
-    #title="Total Confirmed Cases and Hospitalized by Day"
+    labels={"Reported Date":"","value":"Cases Per 100k","variable":"Measure Name"}
+    
     )
 
-st.subheader("All Time Daily Cases Per 100k by Vaccination Status")
+st.subheader("Daily Cases Per 100k by Vaccination Status")
 st.plotly_chart(vax_cases,use_container_width=True)
 
 
@@ -244,32 +245,22 @@ current_age_breakdown = px.bar(current_age_breakdown,
      )
 
 
-#Create a Dataframe and Chart for Cases by Age Group by Day
-#Currently Not in Use as Trends Look Weird
-# age_trend = daily_details.copy()
-# # age_trend = age_trend[(age_trend['Outcome'] == "Not Resolved")] 
-# age_trend = age_trend[["Reported Date","Age Group","Row_ID"]]
-# age_trend = age_trend.groupby(["Reported Date","Age Group"])["Row_ID"].count().reset_index()\
-#         .rename(columns={"Row_ID":"Total"})
-# age_trend["Total"] = age_trend["Total"].rolling(7).mean() #Convert Total to 7 Day Mean
-# age_trend = px.area(age_trend,
-#      x="Reported Date", y="Total", 
-#      color='Age Group',
-#      color_discrete_sequence=px.colors.qualitative.Vivid,
-#      labels={"Reported Date":"","Total":"7 Day Avg."}
-#      )
-
-
 #Create a View for Acquisition of Confirmed Cases
 acquisition = daily_details.copy()
 acquisition = acquisition[["Reported Date","Acquisition Type","Row_ID"]]
 
 #Format Acquisition Labels to be More Readable
-acquisition.loc[acquisition["Acquisition Type"]=="CC", 'Acquisition Type'] = "Close Contact"
-acquisition.loc[acquisition["Acquisition Type"]=="OB", 'Acquisition Type'] = "Outbreak"
-acquisition.loc[acquisition["Acquisition Type"]=="NO KNOWN EPI LINK", 'Acquisition Type'] = "Community Spread"
-acquisition.loc[acquisition["Acquisition Type"]=="MISSING INFORMATION", 'Acquisition Type'] = "Missing Information"
-acquisition.loc[acquisition["Acquisition Type"]=="TRAVEL", 'Acquisition Type'] = "Travel"
+def cond_format(df,column,original,new):
+    df.loc[df[column]== original,column]= new
+    return df
+
+cond_format(acquisition,"Acquisition Type","CC","Close Contact")
+cond_format(acquisition,"Acquisition Type","OB","Outbreak")
+cond_format(acquisition,"Acquisition Type","NO KNOWN EPI LINK","Community Spread")
+cond_format(acquisition,"Acquisition Type","MISSING INFORMATION","Missing Information")
+cond_format(acquisition,"Acquisition Type","TRAVEL","Travel")
+
+#Exclude Missing Information as it Skews Charts
 acquisition = acquisition.loc[(acquisition["Acquisition Type"]!= "Missing Information")]
 
 #Create a Dataframe and Chart for Cases by Acquisition Type
@@ -296,37 +287,61 @@ detail_chart1.subheader("% Total Cases by Age Group")
 detail_chart1.plotly_chart(current_age_breakdown,use_container_width=True)
 detail_chart2.subheader("% Total Cases by Acquisition Type*")
 detail_chart2.plotly_chart(acquisition_overview,use_container_width=True)
-# detail_chart2.plotly_chart(age_trend,use_container_width=True)
-
-
-
-
-#Create a Dataframe and Chart for Cases by Acquisition Type by Day
-#Currently Not in Use as Trends Look Weird
-# acquisition_trend = acquisition.copy()
-# acquisition_trend = acquisition_trend.groupby(["Reported Date","Acquisition Type"])["Row_ID"].count().reset_index()\
-#         .rename(columns={"Row_ID":"Total"})
-# acquisition_trend = px.line(acquisition_trend,
-#      x="Reported Date", y="Total", 
-#      color='Acquisition Type',
-#      color_discrete_sequence=px.colors.qualitative.Antique,
-#      labels={"Reported Date":"","Total":"Total Cases"}
-#      )
-
-
-# #Create Columns for Charts
-# detail_chart3, detail_chart4 = st.columns(2)
-# detail_chart3.subheader("% Total Cases by Acquisition Type*")
-# detail_chart3.plotly_chart(acquisition_overview,use_container_width=True)
 st.caption("'*' Excluding Case Counts Where Acquisition Type is Missing")
-# detail_chart4.subheader("Daily View of Cases by Acquisition Type*")
-# # detail_chart4.plotly_chart(acquisition_trend,use_container_width=True)
-
-# #Overview on Vaccinations
-# st.header("Overall Status of Vaccinations in Ontario")
 
 
-# #test expander
-# with st.expander("About The Author"):
-#     st.write("Testing Some Text That I'll Eventually Write About Myself")
+#Overview on Vaccinations
+st.header("Overall Status of Vaccinations in Ontario")
+
+#Daily Stats on Vaccines
+vaccine_link = 'https://data.ontario.ca/dataset/752ce2b7-c15a-4965-a3dc-397bf405e7cc/resource/8a89caa9-511c-4568-af89-7f2174b4378c/download/vaccine_doses.csv'
+vaccine_cols = ["report_date","previous_day_total_doses_administered","previous_day_at_least_one","previous_day_fully_vaccinated","total_doses_administered","total_individuals_at_least_one","total_individuals_partially_vaccinated",
+    	"total_doses_in_fully_vaccinated_individuals","total_individuals_fully_vaccinated","total_individuals_3doses"]
+vaccines = import_data(vaccine_link,"report_date",vaccine_cols)
+vaccines.rename(columns={"report_date":"Reported Date"}, inplace=True)
+#vaccines = vaccines.fillna(0)
+
+latest_vaccines = vaccines.copy()
+latest_vaccines = latest_vaccines[(latest_vaccines["Reported Date"] == latest_vaccines["Reported Date"].max())]
+
+st.subheader("Overview of Vaccinations in Ontario for "+str(latest_vaccines["Reported Date"].max()))
+
+#Create a Function to Divide Total Vaccines by 1mm and Display as a String
+def show_millions(df,name):
+    df[name] = df[name] / 1000000
+    df[name] = df[name].round(2)
+    df[name] = df[name].astype(str) + " Million"
+    return df[name]
+
+#Create a Reporting Column for Total Individuals Vaccinated
+latest_vaccines["Total Double Vaccinated"] = show_millions(latest_vaccines,"total_individuals_fully_vaccinated")
+latest_vaccines["Total Partially Vaccinated"] = show_millions(latest_vaccines,"total_individuals_partially_vaccinated")
+latest_vaccines["Total Triple Vaccinated"] = show_millions(latest_vaccines,"total_individuals_3doses")
+
+#Display Vaccination Overview as Metrics
+one_dose,two_doses,three_doses = st.columns(3)
+one_dose.metric("Total Partially Vaccinated",str(latest_vaccines["Total Partially Vaccinated"].iloc[-1]))
+two_doses.metric("Total Double Vaccinated",str(latest_vaccines["Total Double Vaccinated"].iloc[-1]))
+three_doses.metric("Total Triple Vaccinated",str(latest_vaccines["Total Triple Vaccinated"].iloc[-1]))
+
+
+#Show a Trend of Vaccine Distribution Over Time
+vaccine_trend = px.line(vaccines, 
+    x="Reported Date", y=["total_individuals_at_least_one","total_individuals_fully_vaccinated","total_individuals_3doses"],
+    color_discrete_sequence=["#87dbff","#00f2b5","#ff8e52"], #Removed 7 day average - hex is "#9c9c9c"
+    labels={"Reported Date":"","value":"Total Vaccinated","variable":"Measure Name"}
+    )
+
+st.plotly_chart(vaccine_trend,use_container_width=True)
+
+
+
+
+
+
+# #About me
+
+# with st.expander("About Me"):
+#     st.image(image, caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
+#     st.write("Hey! I'm James. ")
 
