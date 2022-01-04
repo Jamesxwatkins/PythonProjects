@@ -340,7 +340,7 @@ st.plotly_chart(vaccine_trend,use_container_width=True)
 
 
 # #About me
-image = Image.open("Me.jpg")
+image = Image.open('Me.jpg')
 linkedin = 'https://www.linkedin.com/in/jamesmwatkins/'
 email ='mailto:jameswatkins@live.com?subject=Your%20Cool%20Streamlit%20Dashboard!'
 
