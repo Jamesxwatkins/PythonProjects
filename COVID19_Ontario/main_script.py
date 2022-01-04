@@ -340,7 +340,6 @@ st.plotly_chart(vaccine_trend,use_container_width=True)
 
 
 # #About me
-image = Image.open('Me.jpg')
 linkedin = 'https://www.linkedin.com/in/jamesmwatkins/'
 email ='mailto:jameswatkins@live.com?subject=Your%20Cool%20Streamlit%20Dashboard!'
 
@@ -348,7 +347,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 im = Image.open(os.path.join(script_dir, 'Me.JPG'))
 
 st.sidebar.write("The TLDR About Me")
-st.sidebar.image(image, caption=None, width=225, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
+st.sidebar.image(im, caption=None, width=225, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
 st.sidebar.write("Hey! I'm James. I'm strategic thinker with a knack for visualizing and tackling data driven problems.\
             Currently, I lead a really great team of Data Analysts at RBC in Toronto.")
 st.sidebar.write("When I am not working, I love hanging out with my\
