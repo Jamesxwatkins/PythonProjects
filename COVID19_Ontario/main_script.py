@@ -6,7 +6,7 @@ import plotly.express as px
 from streamlit.elements import image, text
 from streamlit.proto.Image_pb2 import Image
 from PIL import Image
-
+import os.path
 
 # Create a Function That Reads in a csv, Selects Relevant Columns, Formats a Date, and Then Sorts by That Date
 def import_data(path,date_col,columns):
@@ -343,6 +343,9 @@ st.plotly_chart(vaccine_trend,use_container_width=True)
 image = Image.open('Me.jpg')
 linkedin = 'https://www.linkedin.com/in/jamesmwatkins/'
 email ='mailto:jameswatkins@live.com?subject=Your%20Cool%20Streamlit%20Dashboard!'
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+im = Image.open(os.path.join(script_dir, 'Me.jpg'))
 
 st.sidebar.write("The TLDR About Me")
 st.sidebar.image(image, caption=None, width=225, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
