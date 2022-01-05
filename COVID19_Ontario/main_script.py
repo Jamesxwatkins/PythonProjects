@@ -73,9 +73,51 @@ st.caption("This application shows the current status of covid-19 cases in Ontar
     Data is collected from the Ontario Government website which can be found here: \
      https://data.ontario.ca/dataset/status-of-covid-19-cases-in-ontario. This application is for information purposes only.")
 
+
 #Get the Most Recent Data to Show as an Overview
 latest_data = daily_cases.copy()
 latest_data = latest_data[(latest_data["Reported Date"]== latest_data["Reported Date"].max())]
+
+#Using a Total Population of 14,915,270 (Q4 2021) - Create an If Statement that Shows an Emoji Reaction Based on
+# Cases per 100k
+ontario_population = 14915270
+active_cases = int(latest_data["Total Active"].iloc[-1])
+active_cases_per_100k = (active_cases/ontario_population) * 100000
+# active_cases_per_100k = st.slider('Pick a Number', 0, 1001, 10)
+
+
+st.subheader("Current Status of COVID-19 in Ontario (via Emoji's)")
+st.caption("Use this as a gauge to determine if you want to scroll further...")
+
+if active_cases_per_100k > 1000:
+    st.title(":dizzy_face:")
+    st.caption("Ontario has over 1000 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k > 500:
+    st.title(":exploding_head:")
+    st.caption("Ontario has over 500 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k > 200:
+    st.title(":pensive:")
+    st.caption("Ontario has over 200 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k > 100:
+    st.title(":upside_down_face:")
+    st.caption("Ontario has over 100 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k > 50:
+    st.title(":unamused:")
+    st.caption("Ontario has over 50 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k > 25:
+    st.title(":confused:")
+    st.caption("Ontario has over 25 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Getting better though! Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k > 10:
+    st.title(":slightly_frowning_face:")
+    st.caption("Ontario has over 10 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Getting better though! Below this is a detailed breakdown of how we are progressing.")
+elif active_cases_per_100k <= 10:
+    st.title(":slightly_smiling_face:")
+    st.caption("Ontario has less than 10 active cases per 100,000. "+ str(int(active_cases_per_100k))+"  to be exact. Getting better though! Below this is a detailed breakdown of how we are progressing.")
+
+st.write("") #Whitespace
+
+
+
 st.header("Current Snapshot as of "+str(latest_data["Reported Date"].max()))
 
 #Add Columns and Display KPI's. **Note: Deltas are inversed as in this case, an increase is bad.**
@@ -332,10 +374,12 @@ three_doses.metric("Total Triple Vaccinated",str(latest_vaccines["Total Triple V
 vaccine_trend = px.line(vaccines, 
     x="Reported Date", y=["At Least One Dose","Double Vaccinated","Triple Vaccinated"],
     color_discrete_sequence=["#87dbff","#00f2b5","#ff8e52"], 
-    labels={"Reported Date":"","value":"Total Vaccinated","variable":"Measure Name"}
+    labels={"Reported Date":"","value":"Total Vaccinated","variable":"Measure Name"},
+    #title="Cumulative Vaccinations by Day"
     )
 
 #Plot Daily Vaccinations
+st.subheader("Cumulative Vaccinations by Day")
 st.plotly_chart(vaccine_trend,use_container_width=True)
 
 
