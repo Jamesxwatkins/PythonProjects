@@ -49,6 +49,7 @@ daily_cases = import_data(covid_status,"Reported Date",covid_status_columns)
 daily_cases.rename(columns={"Percent positive tests in last day":"Positivity Rate","Number of patients hospitalized with COVID-19":"Hospitalized","Number of patients in ICU due to COVID-19":"In ICU",
     "Total tests completed in the last day":"Total Tests"}, inplace= True)
 
+
 #Add Column Calculations
 daily_cases["Total New Cases"] = daily_cases["Total Cases"] - daily_cases["Total Cases"].shift()
 #Get Increase/Decrease from Previous Day
@@ -136,7 +137,7 @@ latest_data = latest_data[(latest_data["Reported Date"]== latest_data["Reported 
 # Cases per 100k
 active_cases = int(latest_data["Total Active"].iloc[-1])
 active_cases_per_100k = (active_cases/ontario_population) * 100000
-# active_cases_per_100k = st.slider('Pick a Number', 0, 1001, 10)
+# active_cases_per_100k = st.slider('Pick a Number', 0, 1001, 10) - used to test emoji gauge
 
 
 st.subheader("Current Status of COVID-19 in Ontario (via Emoji's)")
@@ -372,21 +373,35 @@ hospital.plotly_chart(hospital_comparison,use_container_width=True)
 icu.plotly_chart(icu_comparison,use_container_width=True)
 
 
-
-
 #Create a Breakdown by Age Group and Acquisition
 st.header("Detailed Breakdown of Confirmed Cases in Ontario This Month")
 
 #Create a Dataframe and Chart for Cases by Age Group
 current_age_breakdown = daily_details.copy()
+
 current_age_breakdown = current_age_breakdown[["Reported Date","Age Group"]]
+
 current_age_breakdown = current_age_breakdown.groupby(["Age Group"]).count()
+
 current_age_breakdown.rename(columns={"Reported Date":"Total"}, inplace=True)
+
+#Create a Function That Calculates the Percentage of Total
+def percent_total(colname,df,numerator,denominator,multiplier):
+    df[colname] = (df[numerator]/df[denominator].sum()) * multiplier
+    df[colname] = df[colname].round(2)
+    df[colname+" Label"] = df[colname].astype(str) + "%"
+    return df[colname]
+
 current_age_breakdown = current_age_breakdown.reset_index()
+
+percentage_of_total = percent_total("Percentage of Total",current_age_breakdown,"Total","Total",100)
+
 current_age_breakdown["Percentage of Total"] = (current_age_breakdown["Total"] / current_age_breakdown["Total"].sum())*100
 current_age_breakdown["Percentage of Total"] = current_age_breakdown["Percentage of Total"].round(2)
 current_age_breakdown["Percentage of Total Label"] = current_age_breakdown["Percentage of Total"].astype(str) + "%"
 current_age_breakdown = current_age_breakdown.sort_values(["Percentage of Total"], ascending=[True])
+
+
 current_age_breakdown = px.bar(current_age_breakdown,
     x="Percentage of Total", y="Age Group",
     color_discrete_sequence=["#fc7e00"],
@@ -419,9 +434,9 @@ acquisition = acquisition.loc[(acquisition["Acquisition Type"]!= "Missing Inform
 acquisition_overview = acquisition.copy()
 acquisition_overview = acquisition_overview.groupby(["Acquisition Type"])["Row_ID"].count().reset_index()\
         .rename(columns={"Row_ID":"Total"})
-acquisition_overview["Percentage of Total"] = (acquisition_overview["Total"] / acquisition_overview["Total"].sum())*100
-acquisition_overview["Percentage of Total"] = acquisition_overview["Percentage of Total"].round(2)
-acquisition_overview["Percentage of Total Label"] = acquisition_overview["Percentage of Total"].astype(str)+"%"
+
+acquisition_percent_of_total = percent_total("Percentage of Total",acquisition_overview,"Total","Total",100)
+
 acquisition_overview = acquisition_overview.sort_values(["Percentage of Total"], ascending=[True])
 acquisition_overview = px.bar(acquisition_overview,
     x="Percentage of Total", y="Acquisition Type",
@@ -449,7 +464,6 @@ st.subheader("Overview of Vaccinations in Ontario as of "+str(latest_vaccines["R
 
 
 #Display Vaccination Overview as Metrics
-
 one_dose,two_doses,three_doses = st.columns(3)
 one_dose.metric("Total Partially Vaccinated",str(latest_vaccines["Partially Vaccinated Reporting"].iloc[-1]))
 two_doses.metric("Total Double Vaccinated",str(latest_vaccines["Double Vaccinated Reporting"].iloc[-1]))
