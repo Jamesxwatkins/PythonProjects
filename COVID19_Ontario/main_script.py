@@ -309,6 +309,7 @@ def show_millions(df,name):
 vaccine_info["Total Double Vaccinated"] = show_millions(vaccine_info,"Double Vaccinated")
 vaccine_info["Total Partially Vaccinated"] = show_millions(vaccine_info,"Partially Vaccinated")
 vaccine_info["Total Triple Vaccinated"] = show_millions(vaccine_info,"Triple Vaccinated")
+vaccine_info["At Least One Dose"] = show_millions(vaccine_info,"At Least One Dose")
 
 #Hospitalizations Per 100k
 #Merge Vaccines and Hospitalizations
@@ -465,7 +466,7 @@ st.subheader("Overview of Vaccinations in Ontario as of "+str(latest_vaccines["R
 
 #Display Vaccination Overview as Metrics
 one_dose,two_doses,three_doses = st.columns(3)
-one_dose.metric("Total Partially Vaccinated",str(latest_vaccines["Partially Vaccinated Reporting"].iloc[-1]))
+one_dose.metric("Total Partially Vaccinated",str(latest_vaccines["At Least One Dose"].iloc[-1]))
 two_doses.metric("Total Double Vaccinated",str(latest_vaccines["Double Vaccinated Reporting"].iloc[-1]))
 three_doses.metric("Total Triple Vaccinated",str(latest_vaccines["Triple Vaccinated Reporting"].iloc[-1]))
 
