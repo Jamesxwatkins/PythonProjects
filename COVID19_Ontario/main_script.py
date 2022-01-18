@@ -35,7 +35,7 @@ st.set_page_config(layout="wide")
 #Create Preliminary Variables that Will be Used in This Analysis
 ontario_population = 14915270 #Based off of Q4 2021
 ontario_population_under_five = 1882571 #Estimate based on age 0-4
-eligible_for_vaccines = ontario_population-ontario_population_under_five
+eligible_for_vaccines = ontario_population-ontario_population_under_five #Children Under Five Not Eligible for a Vaccine
 
 
 #Import Datasets
