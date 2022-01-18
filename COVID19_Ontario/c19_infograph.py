@@ -265,7 +265,7 @@ ontario_covid_data = 'https://data.ontario.ca/dataset/status-of-covid-19-cases-i
 ontario_dashboard = 'https://covid19-sciencetable.ca/ontario-dashboard'
 
 st.title("Status of COVID-19 Cases in Ontario")
-st.caption("This application shows the current status of covid-19 cases in Ontario \
+st.caption("This application shows the current status of COVID-19 cases in Ontario \
     and aims to provide some insights from the data. \
     Data is collected from the Ontario Government website which can be found [here](%s).\
     This application is for information purposes only, and is not in any way, shape, or form an authoritative source."% ontario_covid_data)
